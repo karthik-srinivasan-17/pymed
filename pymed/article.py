@@ -25,6 +25,12 @@ class PubMedArticle(object):
         "results",
         "copyrights",
         "doi",
+        "ISSN",
+        "authors_id",
+        "year",
+        "volume", 
+        "publicationType",
+        "authors_id",
         "xml",
     )
 
@@ -63,7 +69,25 @@ class PubMedArticle(object):
     def _extractJournal(self: object, xml_element: TypeVar("Element")) -> str:
         path = ".//Journal/Title"
         return getContent(element=xml_element, path=path)
-
+    
+  
+    
+    def _extractISSN(self: object, xml_element: TypeVar("Element")) -> str:
+        path = ".//Journal/ISSN"
+        return getContent(element=xml_element, path=path)
+    
+    def _extractYear(self: object, xml_element: TypeVar("Element")) -> str:
+        path = ".//Journal/JournalIssue/PubDate/Year"
+        return getContent(element=xml_element, path=path)
+    
+    def _extractVolume(self: object, xml_element: TypeVar("Element")) -> str:
+        path = ".//Journal/JournalIssue/Volume"
+        return getContent(element=xml_element, path=path)
+    
+    def _extractIssue(self: object, xml_element: TypeVar("Element")) -> str:
+        path = ".//Journal/JournalIssue/Issue"
+        return getContent(element=xml_element, path=path)
+    
     def _extractAbstract(self: object, xml_element: TypeVar("Element")) -> str:
         path = ".//AbstractText"
         return getContent(element=xml_element, path=path)
@@ -114,12 +138,27 @@ class PubMedArticle(object):
         return [
             {
                 "lastname": getContent(author, ".//LastName", None),
-                "firstname": getContent(author, ".//ForeName", None),
+                #"firstname": getContent(author, ".//ForeName", None),
                 "initials": getContent(author, ".//Initials", None),
                 "affiliation": getContent(author, ".//AffiliationInfo/Affiliation", None),
             }
             for author in xml_element.findall(".//Author")
         ]
+    def _extractAuthors_ID(self: object, xml_element: TypeVar("Element")) -> list:
+        return [
+            {
+                "identifier": getContent(author, ".//Identifier", None),
+                #"firstname": getContent(author, ".//ForeName", None),
+                #"initials": getContent(author, ".//Initials", None),
+                #"affiliation": getContent(author, ".//AffiliationInfo/Affiliation", None),
+            }
+            for author in xml_element.findall(".//Author")
+        ]
+    
+
+    def _extractPublicationTypeList(self: object, xml_element: TypeVar("Element")) -> str:
+        path = ".//PublicationTypeList/PublicationType[@UI='D016428']"
+        return getContent(element=xml_element, path=path)
 
     def _initializeFromXML(self: object, xml_element: TypeVar("Element")) -> None:
         """ Helper method that parses an XML element into an article object.
@@ -138,6 +177,11 @@ class PubMedArticle(object):
         self.doi = self._extractDoi(xml_element)
         self.publication_date = self._extractPublicationDate(xml_element)
         self.authors = self._extractAuthors(xml_element)
+        self.ISSN = self._extractISSN(xml_element)
+        self.authors_id = self._extractAuthors_ID(xml_element)
+        self.year = self._extractYear(xml_element)
+        self.volume =self._extractVolume(xml_element)
+        self.publicationType = self._extractPublicationTypeList(xml_element)
         self.xml = xml_element
 
     def toDict(self: object) -> dict:
